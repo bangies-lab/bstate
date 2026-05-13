@@ -104,6 +104,25 @@ class DefaultBState implements BState {
     }
 
     @Override
+    public <K, V> BStore<K, V> getOrRegisterStore(
+            String name,
+            Class<K> keyType,
+            Class<V> valueType
+    ) {
+        return registerStore(name, keyType, valueType);
+    }
+
+    @Override
+    public <K, V> BStore<K, V> getOrRegisterStore(
+            String name,
+            Class<K> keyType,
+            Class<V> valueType,
+            StoreOptions options
+    ) {
+        return registerStore(name, keyType, valueType, options);
+    }
+
+    @Override
     public void removeStore(String name) {
         validateStoreName(name);
         stores.remove(name);

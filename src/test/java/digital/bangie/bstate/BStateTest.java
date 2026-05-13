@@ -724,6 +724,101 @@ public class BStateTest {
         assertEquals(0, userStore.stats().getMisses());
     }
 
+    @Test
+    void shouldRegisterStoreWhenGetOrRegisterStoreDoesNotExist() {
+        BState state = BState.inMemory();
+
+        BStore<UUID, User> userStore = state.getOrRegisterStore(
+                "users",
+                UUID.class,
+                User.class
+        );
+
+        User bangie = saveUser(User.builder()
+                .name("Bangie")
+                .age(36)
+                .build());
+
+        userStore.put(bangie.getId(), bangie);
+
+        assertEquals(bangie, userStore.getOrThrow(bangie.getId()));
+    }
+
+    @Test
+    void shouldReturnExistingStoreWhenGetOrRegisterStoreAlreadyExists() {
+        BState state = BState.inMemory();
+
+        BStore<UUID, User> first = state.registerStore(
+                "users",
+                UUID.class,
+                User.class
+        );
+
+        BStore<UUID, User> second = state.getOrRegisterStore(
+                "users",
+                UUID.class,
+                User.class
+        );
+
+        assertSame(first, second);
+    }
+
+    @Test
+    void shouldRejectGetOrRegisterStoreWhenStoreExistsWithDifferentTypes() {
+        BState state = BState.inMemory();
+
+        state.registerStore(
+                "users",
+                UUID.class,
+                User.class
+        );
+
+        IllegalStateException exception = assertThrows(
+                IllegalStateException.class,
+                () -> state.getOrRegisterStore("users", String.class, User.class)
+        );
+
+        assertTrue(exception.getMessage().contains("different key or value type"));
+    }
+
+    @Test
+    void shouldRegisterStoreWithOptionsWhenUsingGetOrRegisterStore() {
+        BState state = BState.inMemory();
+
+        BStore<UUID, User> userStore = state.getOrRegisterStore(
+                "users",
+                UUID.class,
+                User.class,
+                StoreOptions.builder()
+                        .ttl(Duration.ofMinutes(5))
+                        .maxSize(2)
+                        .evictionStrategy(EvictionStrategy.NONE)
+                        .build()
+        );
+
+        User first = saveUser(User.builder()
+                .name("First")
+                .age(1)
+                .build());
+
+        User second = saveUser(User.builder()
+                .name("Second")
+                .age(2)
+                .build());
+
+        User third = saveUser(User.builder()
+                .name("Third")
+                .age(3)
+                .build());
+
+        userStore.put(first.getId(), first);
+        userStore.put(second.getId(), second);
+        userStore.put(third.getId(), third);
+
+        assertEquals(3, userStore.size());
+        assertEquals(0, userStore.stats().getEvictions());
+    }
+
     private User saveUser(User user) {
         if (user.getId() != null) {
             return user;

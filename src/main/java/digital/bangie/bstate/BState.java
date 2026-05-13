@@ -37,6 +37,19 @@ public interface BState {
             Class<V> valueType
     );
 
+    <K, V> BStore<K, V> getOrRegisterStore(
+            String name,
+            Class<K> keyType,
+            Class<V> valueType
+    );
+
+    <K, V> BStore<K, V> getOrRegisterStore(
+            String name,
+            Class<K> keyType,
+            Class<V> valueType,
+            StoreOptions options
+    );
+
     void removeStore(String name);
 
     void clearStore(String name);
