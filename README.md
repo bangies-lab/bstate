@@ -57,3 +57,17 @@ This gives you:
 - clean API without framework dependency
 
 ---
+
+## Background cleaner
+
+Expired values are removed when they are accessed through `get`, `contains`, or manual cleanup.
+
+You can also run automatic cleanup in the background:
+
+```java
+BStateCleaner cleaner = BStateCleaner.builder()
+        .state(state)
+        .interval(Duration.ofMinutes(1))
+        .build();
+
+cleaner.start();
