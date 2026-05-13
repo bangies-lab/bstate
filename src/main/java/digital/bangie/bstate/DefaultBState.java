@@ -123,6 +123,17 @@ class DefaultBState implements BState {
     }
 
     @Override
+    public int cleanupAll() {
+        int removed = 0;
+
+        for (RegisteredStore<?, ?> registeredStore : stores.values()) {
+            removed += registeredStore.store().cleanupExpired();
+        }
+
+        return removed;
+    }
+
+    @Override
     public void removeStore(String name) {
         validateStoreName(name);
         stores.remove(name);

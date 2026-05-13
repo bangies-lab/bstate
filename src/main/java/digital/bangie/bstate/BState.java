@@ -50,6 +50,8 @@ public interface BState {
             StoreOptions options
     );
 
+    int cleanupAll();
+
     void removeStore(String name);
 
     void clearStore(String name);

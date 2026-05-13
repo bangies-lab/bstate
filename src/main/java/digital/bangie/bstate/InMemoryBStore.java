@@ -154,6 +154,24 @@ class InMemoryBStore<K, V> implements BStore<K, V> {
     }
 
     @Override
+    public int cleanupExpired() {
+        int removed = 0;
+
+        for (Map.Entry<K, StoreEntry<V>> entry : entries.entrySet()) {
+            if (entry.getValue().isExpired()) {
+                boolean didRemove = entries.remove(entry.getKey(), entry.getValue());
+
+                if (didRemove) {
+                    removed++;
+                    stats.recordExpiredRemoval();
+                }
+            }
+        }
+
+        return removed;
+    }
+
+    @Override
     public void remove(K key) {
         validateKey(key);
 

@@ -23,6 +23,8 @@ public interface BStore<K, V> {
 
     V remember(K key, Supplier<V> supplier, Duration ttl);
 
+    int cleanupExpired();
+
     void remove(K key);
 
     void clear();

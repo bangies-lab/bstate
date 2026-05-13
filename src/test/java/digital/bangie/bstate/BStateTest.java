@@ -819,6 +819,112 @@ public class BStateTest {
         assertEquals(0, userStore.stats().getEvictions());
     }
 
+    @Test
+    void shouldCleanupExpiredValuesFromStore() throws InterruptedException {
+        BState state = BState.inMemory();
+
+        BStore<UUID, User> userStore = state.registerStore(
+                "users",
+                UUID.class,
+                User.class,
+                StoreOptions.builder()
+                        .ttl(Duration.ofMillis(50))
+                        .maxSize(100)
+                        .evictionStrategy(EvictionStrategy.OLDEST)
+                        .build()
+        );
+
+        User bangie = saveUser(User.builder()
+                .name("Bangie")
+                .age(36)
+                .build());
+
+        userStore.put(bangie.getId(), bangie);
+
+        Thread.sleep(80);
+
+        int removed = userStore.cleanupExpired();
+
+        assertEquals(1, removed);
+        assertEquals(0, userStore.size());
+        assertEquals(1, userStore.stats().getExpiredRemovals());
+    }
+
+    @Test
+    void shouldNotCleanupValuesThatAreNotExpired() {
+        BState state = BState.inMemory();
+
+        BStore<UUID, User> userStore = state.registerStore(
+                "users",
+                UUID.class,
+                User.class,
+                StoreOptions.builder()
+                        .ttl(Duration.ofMinutes(5))
+                        .maxSize(100)
+                        .evictionStrategy(EvictionStrategy.OLDEST)
+                        .build()
+        );
+
+        User bangie = saveUser(User.builder()
+                .name("Bangie")
+                .age(36)
+                .build());
+
+        userStore.put(bangie.getId(), bangie);
+
+        int removed = userStore.cleanupExpired();
+
+        assertEquals(0, removed);
+        assertEquals(1, userStore.size());
+        assertTrue(userStore.contains(bangie.getId()));
+    }
+
+    @Test
+    void shouldCleanupExpiredValuesFromAllStores() throws InterruptedException {
+        BState state = BState.inMemory();
+
+        StoreOptions options = StoreOptions.builder()
+                .ttl(Duration.ofMillis(50))
+                .maxSize(100)
+                .evictionStrategy(EvictionStrategy.OLDEST)
+                .build();
+
+        BStore<UUID, User> userStore = state.registerStore(
+                "users",
+                UUID.class,
+                User.class,
+                options
+        );
+
+        BStore<UUID, Product> productStore = state.registerStore(
+                "products",
+                UUID.class,
+                Product.class,
+                options
+        );
+
+        User bangie = saveUser(User.builder()
+                .name("Bangie")
+                .age(36)
+                .build());
+
+        Product keyboard = Product.builder()
+                .id(UUID.randomUUID())
+                .name("Tipkalica")
+                .build();
+
+        userStore.put(bangie.getId(), bangie);
+        productStore.put(keyboard.getId(), keyboard);
+
+        Thread.sleep(80);
+
+        int removed = state.cleanupAll();
+
+        assertEquals(2, removed);
+        assertEquals(0, userStore.size());
+        assertEquals(0, productStore.size());
+    }
+
     private User saveUser(User user) {
         if (user.getId() != null) {
             return user;
