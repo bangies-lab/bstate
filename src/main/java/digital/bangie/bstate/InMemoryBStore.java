@@ -52,6 +52,21 @@ class InMemoryBStore<K, V> implements BStore<K, V> {
     }
 
     @Override
+    public Class<K> keyType() {
+        return keyType;
+    }
+
+    @Override
+    public Class<V> valueType() {
+        return valueType;
+    }
+
+    @Override
+    public StoreOptions options() {
+        return options;
+    }
+
+    @Override
     public void put(K key, V value) {
         put(key, value, options.getTtl());
     }

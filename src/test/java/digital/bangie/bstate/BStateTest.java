@@ -6,6 +6,7 @@ import digital.bangie.bstate.enums.EvictionStrategy;
 import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -935,5 +936,130 @@ public class BStateTest {
                 .name(user.getName())
                 .age(user.getAge())
                 .build();
+    }
+
+    @Test
+    void shouldReturnStoreNames() {
+        BState state = BState.inMemory();
+
+        state.registerStore(
+                "users",
+                UUID.class,
+                User.class
+        );
+
+        state.registerStore(
+                "products",
+                UUID.class,
+                Product.class
+        );
+
+        assertTrue(state.storeNames().contains("users"));
+        assertTrue(state.storeNames().contains("products"));
+        assertEquals(2, state.storeNames().size());
+    }
+
+    @Test
+    void shouldReturnStoreCount() {
+        BState state = BState.inMemory();
+
+        assertEquals(0, state.storeCount());
+
+        state.registerStore(
+                "users",
+                UUID.class,
+                User.class
+        );
+
+        assertEquals(1, state.storeCount());
+    }
+
+    @Test
+    void shouldReturnTrueWhenStateHasStore() {
+        BState state = BState.inMemory();
+
+        state.registerStore(
+                "users",
+                UUID.class,
+                User.class
+        );
+
+        assertTrue(state.hasStore("users"));
+    }
+
+    @Test
+    void shouldReturnFalseWhenStateDoesNotHaveStore() {
+        BState state = BState.inMemory();
+
+        assertFalse(state.hasStore("users"));
+    }
+
+    @Test
+    void shouldReturnStoreInfo() {
+        BState state = BState.inMemory();
+
+        BStore<UUID, User> userStore = state.registerStore(
+                "users",
+                UUID.class,
+                User.class,
+                StoreOptions.builder()
+                        .ttl(Duration.ofMinutes(10))
+                        .maxSize(5000)
+                        .evictionStrategy(EvictionStrategy.LRU)
+                        .build()
+        );
+
+        User bangie = saveUser(User.builder()
+                .name("Bangie")
+                .age(36)
+                .build());
+
+        userStore.put(bangie.getId(), bangie);
+
+        Optional<StoreInfo> result = state.storeInfo("users");
+
+        assertTrue(result.isPresent());
+
+        StoreInfo info = result.get();
+
+        assertEquals("users", info.getName());
+        assertEquals(UUID.class, info.getKeyType());
+        assertEquals(User.class, info.getValueType());
+        assertEquals(1, info.getSize());
+        assertEquals(Duration.ofMinutes(10), info.getTtl());
+        assertEquals(5000, info.getMaxSize());
+        assertEquals(EvictionStrategy.LRU, info.getEvictionStrategy());
+    }
+
+    @Test
+    void shouldReturnEmptyStoreInfoWhenStoreDoesNotExist() {
+        BState state = BState.inMemory();
+
+        Optional<StoreInfo> result = state.storeInfo("users");
+
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    void shouldReturnStoreInfos() {
+        BState state = BState.inMemory();
+
+        state.registerStore(
+                "users",
+                UUID.class,
+                User.class
+        );
+
+        state.registerStore(
+                "products",
+                UUID.class,
+                Product.class
+        );
+
+        List<StoreInfo> result = state.storeInfos();
+
+        assertEquals(2, result.size());
+        assertTrue(result.stream().anyMatch(info -> info.getName().equals("users")));
+        assertTrue(result.stream().anyMatch(info -> info.getName().equals("products")));
     }
 }

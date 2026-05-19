@@ -2,7 +2,8 @@
 
 bState is a lightweight Java library for managing typed state stores.
 
-It is designed for situations where you want a simple in-memory state/cache layer without being tied to Spring Boot, annotations, Redis, or any framework-specific magic.
+It is designed for situations where you want a simple in-memory state/cache layer without being tied to Spring Boot,
+annotations, Redis, or any framework-specific magic.
 
 The core idea is simple:
 
@@ -25,8 +26,10 @@ Each store is separated by name, key type, value type, TTL, max size, and evicti
 Sometimes you do not want one giant cache bucket with string keys like:
 
 ```java
-cache.put("users:" + userId, user);
-cache.put("products:" + productId, product);
+cache.put("users:"+userId, user);
+cache.
+
+put("products:"+productId, product);
 ```
 
 Instead, bState lets you create typed stores:
@@ -71,3 +74,20 @@ BStateCleaner cleaner = BStateCleaner.builder()
         .build();
 
 cleaner.start();
+```
+
+## Store metadata
+
+bState can describe registered stores:
+
+```java
+Set<String> names = state.storeNames();
+
+int count = state.storeCount();
+
+boolean hasUsers = state.hasStore("users");
+
+Optional<StoreInfo> info = state.storeInfo("users");
+
+List<StoreInfo> infos = state.storeInfos();
+```

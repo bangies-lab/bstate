@@ -3,7 +3,7 @@ package digital.bangie.bstate;
 import digital.bangie.bstate.enums.EvictionStrategy;
 
 import java.time.Duration;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 class DefaultBState implements BState {
@@ -17,6 +17,46 @@ class DefaultBState implements BState {
 
         this.defaultOptions = defaultOptions;
         this.stores = new ConcurrentHashMap<>();
+    }
+
+    @Override
+    public Set<String> storeNames() {
+        return Collections.unmodifiableSet(stores.keySet());
+    }
+
+    @Override
+    public int storeCount() {
+        return stores.size();
+    }
+
+    @Override
+    public boolean hasStore(String name) {
+        validateStoreName(name);
+        return stores.containsKey(name);
+    }
+
+    @Override
+    public Optional<StoreInfo> storeInfo(String name) {
+        validateStoreName(name);
+
+        RegisteredStore<?, ?> registeredStore = stores.get(name);
+
+        if (registeredStore == null) {
+            return Optional.empty();
+        }
+
+        return Optional.of(toStoreInfo(registeredStore));
+    }
+
+    @Override
+    public List<StoreInfo> storeInfos() {
+        List<StoreInfo> result = new ArrayList<>();
+
+        for (RegisteredStore<?, ?> registeredStore : stores.values()) {
+            result.add(toStoreInfo(registeredStore));
+        }
+
+        return Collections.unmodifiableList(result);
     }
 
     @Override
@@ -198,5 +238,20 @@ class DefaultBState implements BState {
 
             return valueType.equals(expectedValueType);
         }
+    }
+
+    private StoreInfo toStoreInfo(RegisteredStore<?, ?> registeredStore) {
+        BStore<?, ?> store = registeredStore.store();
+        StoreOptions options = store.options();
+
+        return new StoreInfo(
+                store.name(),
+                store.keyType(),
+                store.valueType(),
+                store.size(),
+                options.getTtl(),
+                options.getMaxSize(),
+                options.getEvictionStrategy()
+        );
     }
 }

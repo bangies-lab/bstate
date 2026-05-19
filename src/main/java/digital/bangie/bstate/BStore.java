@@ -7,6 +7,12 @@ import java.util.function.Supplier;
 public interface BStore<K, V> {
     String name();
 
+    Class<K> keyType();
+
+    Class<V> valueType();
+
+    StoreOptions options();
+
     void put(K key, V value);
 
     void put(K key, V value, Duration ttl);

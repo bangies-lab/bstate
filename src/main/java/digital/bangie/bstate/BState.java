@@ -3,7 +3,9 @@ package digital.bangie.bstate;
 import digital.bangie.bstate.enums.EvictionStrategy;
 
 import java.time.Duration;
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 public interface BState {
     static BStateBuilder builder() {
@@ -17,6 +19,16 @@ public interface BState {
     static BState inMemory() {
         return builder().build();
     }
+
+    Set<String> storeNames();
+
+    int storeCount();
+
+    boolean hasStore(String name);
+
+    Optional<StoreInfo> storeInfo(String name);
+
+    List<StoreInfo> storeInfos();
 
     <K, V> BStore<K, V> registerStore(
             String name,
