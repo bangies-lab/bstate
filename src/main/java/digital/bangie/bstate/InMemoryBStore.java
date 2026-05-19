@@ -212,6 +212,11 @@ class InMemoryBStore<K, V> implements BStore<K, V> {
         return stats;
     }
 
+    @Override
+    public StoreStatsSnapshot statsSnapshot() {
+        return stats.snapshot(size());
+    }
+
     private void validateKey(K key) {
         if (key == null) {
             throw new IllegalArgumentException("Key cannot be null");

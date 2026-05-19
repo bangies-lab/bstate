@@ -91,3 +91,27 @@ Optional<StoreInfo> info = state.storeInfo("users");
 
 List<StoreInfo> infos = state.storeInfos();
 ```
+
+## Stats snapshots
+
+Each store exposes live stats:
+
+```java
+StoreStats stats = userStore.stats();
+```
+
+For a stable point-in-time view, use statsSnapshot():
+```java
+StoreStatsSnapshot snapshot = userStore.statsSnapshot();
+
+long hits = snapshot.getHits();
+long misses = snapshot.getMisses();
+long reads = snapshot.getReads();
+
+double hitRate = snapshot.getHitRate();
+double missRate = snapshot.getMissRate();
+
+int size = snapshot.getSize();
+Instant capturedAt = snapshot.getCapturedAt();
+```
+StoreStatsSnapshot is immutable. Later store operations do not change an already created snapshot.

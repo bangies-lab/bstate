@@ -1062,4 +1062,155 @@ public class BStateTest {
         assertTrue(result.stream().anyMatch(info -> info.getName().equals("users")));
         assertTrue(result.stream().anyMatch(info -> info.getName().equals("products")));
     }
+
+    @Test
+    void shouldReturnStatsSnapshot() {
+        BState state = BState.inMemory();
+
+        BStore<UUID, User> userStore = state.registerStore(
+                "users",
+                UUID.class,
+                User.class
+        );
+
+        User bangie = saveUser(User.builder()
+                .name("Bangie")
+                .age(36)
+                .build());
+
+        userStore.put(bangie.getId(), bangie);
+        userStore.get(bangie.getId());
+        userStore.get(UUID.randomUUID());
+
+        StoreStatsSnapshot snapshot = userStore.statsSnapshot();
+
+        assertEquals(1, snapshot.getHits());
+        assertEquals(1, snapshot.getMisses());
+        assertEquals(1, snapshot.getPuts());
+        assertEquals(0, snapshot.getRemovals());
+        assertEquals(0, snapshot.getExpiredRemovals());
+        assertEquals(0, snapshot.getEvictions());
+        assertEquals(1, snapshot.getSize());
+        assertNotNull(snapshot.getCapturedAt());
+    }
+
+    @Test
+    void shouldCalculateReadsInStatsSnapshot() {
+        BState state = BState.inMemory();
+
+        BStore<UUID, User> userStore = state.registerStore(
+                "users",
+                UUID.class,
+                User.class
+        );
+
+        User bangie = saveUser(User.builder()
+                .name("Bangie")
+                .age(36)
+                .build());
+
+        userStore.put(bangie.getId(), bangie);
+
+        userStore.get(bangie.getId());
+        userStore.get(UUID.randomUUID());
+        userStore.get(UUID.randomUUID());
+
+        StoreStatsSnapshot snapshot = userStore.statsSnapshot();
+
+        assertEquals(3, snapshot.getReads());
+    }
+
+    @Test
+    void shouldCalculateHitRateInStatsSnapshot() {
+        BState state = BState.inMemory();
+
+        BStore<UUID, User> userStore = state.registerStore(
+                "users",
+                UUID.class,
+                User.class
+        );
+
+        User bangie = saveUser(User.builder()
+                .name("Bangie")
+                .age(36)
+                .build());
+
+        userStore.put(bangie.getId(), bangie);
+
+        userStore.get(bangie.getId());
+        userStore.get(UUID.randomUUID());
+
+        StoreStatsSnapshot snapshot = userStore.statsSnapshot();
+
+        assertEquals(0.5, snapshot.getHitRate());
+    }
+
+    @Test
+    void shouldCalculateMissRateInStatsSnapshot() {
+        BState state = BState.inMemory();
+
+        BStore<UUID, User> userStore = state.registerStore(
+                "users",
+                UUID.class,
+                User.class
+        );
+
+        User bangie = saveUser(User.builder()
+                .name("Bangie")
+                .age(36)
+                .build());
+
+        userStore.put(bangie.getId(), bangie);
+
+        userStore.get(bangie.getId());
+        userStore.get(UUID.randomUUID());
+
+        StoreStatsSnapshot snapshot = userStore.statsSnapshot();
+
+        assertEquals(0.5, snapshot.getMissRate());
+    }
+
+    @Test
+    void shouldReturnZeroRatesWhenStatsSnapshotHasNoReads() {
+        BState state = BState.inMemory();
+
+        BStore<UUID, User> userStore = state.registerStore(
+                "users",
+                UUID.class,
+                User.class
+        );
+
+        StoreStatsSnapshot snapshot = userStore.statsSnapshot();
+
+        assertEquals(0, snapshot.getReads());
+        assertEquals(0.0, snapshot.getHitRate());
+        assertEquals(0.0, snapshot.getMissRate());
+    }
+
+    @Test
+    void shouldKeepStatsSnapshotImmutableAfterMoreOperations() {
+        BState state = BState.inMemory();
+
+        BStore<UUID, User> userStore = state.registerStore(
+                "users",
+                UUID.class,
+                User.class
+        );
+
+        User bangie = saveUser(User.builder()
+                .name("Bangie")
+                .age(36)
+                .build());
+
+        userStore.put(bangie.getId(), bangie);
+        userStore.get(bangie.getId());
+
+        StoreStatsSnapshot snapshot = userStore.statsSnapshot();
+
+        userStore.get(UUID.randomUUID());
+
+        assertEquals(1, snapshot.getHits());
+        assertEquals(0, snapshot.getMisses());
+        assertEquals(1, snapshot.getReads());
+    }
 }

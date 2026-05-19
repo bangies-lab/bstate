@@ -38,4 +38,6 @@ public interface BStore<K, V> {
     int size();
 
     StoreStats stats();
+
+    StoreStatsSnapshot statsSnapshot();
 }

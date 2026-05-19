@@ -1,58 +1,74 @@
 package digital.bangie.bstate;
 
+import java.time.Instant;
+import java.util.concurrent.atomic.AtomicLong;
+
 public class StoreStats {
-    private long hits;
-    private long misses;
-    private long puts;
-    private long removals;
-    private long expiredRemovals;
-    private long evictions;
+    private final AtomicLong hits = new AtomicLong(0);
+    private final AtomicLong misses = new AtomicLong(0);
+    private final AtomicLong puts = new AtomicLong(0);
+    private final AtomicLong removals = new AtomicLong(0);
+    private final AtomicLong expiredRemovals = new AtomicLong(0);
+    private final AtomicLong evictions = new AtomicLong(0);
 
-    public void recordHit() {
-        hits++;
+    void recordHit() {
+        hits.incrementAndGet();
     }
 
-    public void recordMiss() {
-        misses++;
+    void recordMiss() {
+        misses.incrementAndGet();
     }
 
-    public void recordPut() {
-        puts++;
+    void recordPut() {
+        puts.incrementAndGet();
     }
 
-    public void recordRemoval() {
-        removals++;
+    void recordRemoval() {
+        removals.incrementAndGet();
     }
 
-    public void recordExpiredRemoval() {
-        expiredRemovals++;
+    void recordExpiredRemoval() {
+        expiredRemovals.incrementAndGet();
     }
 
-    public void recordEviction() {
-        evictions++;
+    void recordEviction() {
+        evictions.incrementAndGet();
     }
 
     public long getHits() {
-        return hits;
+        return hits.get();
     }
 
     public long getMisses() {
-        return misses;
+        return misses.get();
     }
 
     public long getPuts() {
-        return puts;
+        return puts.get();
     }
 
     public long getRemovals() {
-        return removals;
+        return removals.get();
     }
 
     public long getExpiredRemovals() {
-        return expiredRemovals;
+        return expiredRemovals.get();
     }
 
     public long getEvictions() {
-        return evictions;
+        return evictions.get();
+    }
+
+    public StoreStatsSnapshot snapshot(int size) {
+        return new StoreStatsSnapshot(
+                getHits(),
+                getMisses(),
+                getPuts(),
+                getRemovals(),
+                getExpiredRemovals(),
+                getEvictions(),
+                size,
+                Instant.now()
+        );
     }
 }
