@@ -115,3 +115,18 @@ int size = snapshot.getSize();
 Instant capturedAt = snapshot.getCapturedAt();
 ```
 StoreStatsSnapshot is immutable. Later store operations do not change an already created snapshot.
+
+## Serialization API
+
+bState includes a small serialization API for future persistent/distributed stores.
+
+```java
+BStateSerializer serializer = new JavaBStateSerializer();
+
+byte[] data = serializer.serialize(user);
+
+User restoredUser = serializer.deserialize(data, User.class);
+```
+The default JavaBStateSerializer uses Java object serialization, so values must implement Serializable.
+The in-memory store does not use serialization. It keeps normal Java object references.
+Serialization exists as a foundation for future stores such as file-based storage.
