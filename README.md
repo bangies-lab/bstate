@@ -130,3 +130,102 @@ User restoredUser = serializer.deserialize(data, User.class);
 The default JavaBStateSerializer uses Java object serialization, so values must implement Serializable.
 The in-memory store does not use serialization. It keeps normal Java object references.
 Serialization exists as a foundation for future stores such as file-based storage.
+
+## Snapshot persistence
+
+bState can persist the full in-memory state into a single snapshot file.
+
+This allows the application to restore state after restart without rebuilding everything again.
+
+### Manual save
+
+```java
+BStatePersistence.save(
+        state,
+        Path.of("bstate.snapshot")
+);
+```
+
+### Manual load
+
+```java
+BState restored = BStatePersistence.load(
+        Path.of("bstate.snapshot")
+);
+```
+
+### Restore into existing state
+
+```java
+BStatePersistence.restore(
+        state,
+        Path.of("bstate.snapshot")
+);
+```
+
+### What is stored
+
+The snapshot contains:
+
+- store metadata
+- store options
+- keys
+- values
+- expiration timestamps
+
+Expired entries are skipped during restore.
+
+Valid entries restore using their remaining TTL instead of receiving a fresh full TTL.
+
+---
+
+## Periodic state saver
+
+bState includes an optional background saver that periodically writes snapshots to disk.
+
+Default save interval:
+
+```text
+5 minutes
+```
+
+### Example
+
+```java
+BStateSaver saver = BStateSaver.builder()
+        .state(state)
+        .path(Path.of("bstate.snapshot"))
+        .build();
+
+saver.start();
+```
+
+### Custom interval
+
+```java
+BStateSaver saver = BStateSaver.builder()
+        .state(state)
+        .path(Path.of("bstate.snapshot"))
+        .interval(Duration.ofSeconds(30))
+        .build();
+```
+
+### Stop saver
+
+```java
+saver.stop();
+```
+
+### Try-with-resources
+
+```java
+try (BStateSaver saver = BStateSaver.builder()
+        .state(state)
+        .path(Path.of("bstate.snapshot"))
+        .build()) {
+    saver.start();
+    // application logic
+}
+```
+
+The saver uses a daemon thread by default, so it will not keep the JVM alive after application shutdown.
