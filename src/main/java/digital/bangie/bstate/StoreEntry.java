@@ -37,6 +37,10 @@ class StoreEntry<V> {
         this.accessOrder = accessOrder;
     }
 
+    Instant getExpiresAt() {
+        return expiresAt;
+    }
+
     boolean isExpired() {
         return Instant.now().isAfter(expiresAt);
     }

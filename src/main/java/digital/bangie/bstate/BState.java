@@ -1,6 +1,7 @@
 package digital.bangie.bstate;
 
 import digital.bangie.bstate.enums.EvictionStrategy;
+import digital.bangie.bstate.persistence.BStateSnapshot;
 
 import java.time.Duration;
 import java.util.List;
@@ -25,6 +26,8 @@ public interface BState {
     int storeCount();
 
     boolean hasStore(String name);
+
+    BStateSnapshot snapshot();
 
     Optional<StoreInfo> storeInfo(String name);
 

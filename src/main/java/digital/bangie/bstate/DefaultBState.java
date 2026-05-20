@@ -1,8 +1,11 @@
 package digital.bangie.bstate;
 
 import digital.bangie.bstate.enums.EvictionStrategy;
+import digital.bangie.bstate.persistence.BStateSnapshot;
+import digital.bangie.bstate.persistence.BStoreSnapshot;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -33,6 +36,21 @@ class DefaultBState implements BState {
     public boolean hasStore(String name) {
         validateStoreName(name);
         return stores.containsKey(name);
+    }
+
+    @Override
+    public BStateSnapshot snapshot() {
+        List<BStoreSnapshot> snapshots = new ArrayList<>();
+
+        for (RegisteredStore<?, ?> registeredStore : stores.values()) {
+            snapshots.add(registeredStore.store().snapshot());
+        }
+
+        return new BStateSnapshot(
+                1,
+                Instant.now(),
+                snapshots
+        );
     }
 
     @Override

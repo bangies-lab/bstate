@@ -1,5 +1,7 @@
 package digital.bangie.bstate;
 
+import digital.bangie.bstate.persistence.BStoreSnapshot;
+
 import java.time.Duration;
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -40,4 +42,6 @@ public interface BStore<K, V> {
     StoreStats stats();
 
     StoreStatsSnapshot statsSnapshot();
+
+    BStoreSnapshot snapshot();
 }

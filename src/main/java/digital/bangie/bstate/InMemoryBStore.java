@@ -1,12 +1,12 @@
 package digital.bangie.bstate;
 
 import digital.bangie.bstate.enums.EvictionStrategy;
+import digital.bangie.bstate.persistence.BStoreEntrySnapshot;
+import digital.bangie.bstate.persistence.BStoreSnapshot;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Comparator;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
@@ -215,6 +215,34 @@ class InMemoryBStore<K, V> implements BStore<K, V> {
     @Override
     public StoreStatsSnapshot statsSnapshot() {
         return stats.snapshot(size());
+    }
+
+    @Override
+    public BStoreSnapshot snapshot() {
+        List<BStoreEntrySnapshot> snapshots = new ArrayList<>();
+
+        for (Map.Entry<K, StoreEntry<V>> entry : entries.entrySet()) {
+            StoreEntry<V> storeEntry = entry.getValue();
+
+            if (!storeEntry.isExpired()) {
+                snapshots.add(new BStoreEntrySnapshot(
+                        entry.getKey(),
+                        storeEntry.getValue(),
+                        storeEntry.getCreatedAt(),
+                        storeEntry.getExpiresAt()
+                ));
+            }
+        }
+
+        return new BStoreSnapshot(
+                name,
+                keyType.getName(),
+                valueType.getName(),
+                options.getTtl(),
+                options.getMaxSize(),
+                options.getEvictionStrategy(),
+                snapshots
+        );
     }
 
     private void validateKey(K key) {
